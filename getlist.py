@@ -1,9 +1,31 @@
 import csv
 import os
 import shutil
+import requests
 
 temp_folder = './temp/'
+phishes_file_path = f'./{temp_folder}/verified_online.csv'
 list_name = 'PhishingList'
+
+def get_phishing_list():
+    url = f"http://data.phishtank.com/data/online-valid.csv"
+    print(f"[*] Fetching url: {url}")
+    response = requests.get(url)
+     
+    # Check if the response is successful
+    if response.status_code == 200:
+        content_type = response.headers.get('content-type')
+        print(content_type)
+        if (content_type =='text/csv') :
+            with open(phishes_file_path, 'wt', encoding="utf-8") as csvfile:
+                csvfile.write(response.text)
+            print(f"[*] Successfully written csv at: {phishes_file_path}")
+        else:
+            print(f"[ERROR] Expected csv but got: {content_type}")
+    else:
+            print(f"[ERROR] Got Status Code: {response.status_code}")
+            
+            
 
 if os.path.exists(temp_folder):
     print("[*] Removing temp folder")
@@ -13,15 +35,14 @@ print("[*] Create new temp folder")
 os.mkdir(temp_folder)
 
 print("[*] Fetching List from PhishTank")
-# call PhishTank-API and put csv in the temp folder
-# Remember to do Error handling
+get_phishing_list()
 
 # For simplicity I am using the local csv for now
-shutil.copyfile('./verified_online.csv', f'./{temp_folder}/verified_online.csv')
+# shutil.copyfile('./verified_online.csv', phishes_file_path)
 
 print("[*] Reading new list")
 new_links = set()
-with open(f'./{temp_folder}/verified_online.csv', 'r', encoding="utf-8") as csvfile:
+with open(phishes_file_path, 'r', encoding="utf-8") as csvfile:
     csvreader = csv.reader(csvfile, delimiter=',')
     for row in csvreader:
         if row[4].strip().lower() == "yes":
