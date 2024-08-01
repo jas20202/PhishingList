@@ -1,0 +1,2 @@
+.*\.live\.com$
+.*\.google\.(com|de)$
