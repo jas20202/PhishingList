@@ -1,11 +1,13 @@
 import csv
 import os
+import re
 import shutil
 import requests
 
-temp_folder = './temp/'
-phishes_file_path = f'./{temp_folder}/verified_online.csv'
-list_name = 'PhishingList'
+temp_folder = './temp'
+phishes_file_path = f'{temp_folder}/verified_online.csv'
+list_name = './phishes'
+whitelist_path = "./whitelist.txt"
 
 def get_phishing_list():
     url = f"http://data.phishtank.com/data/online-valid.csv"
@@ -34,11 +36,17 @@ if os.path.exists(temp_folder):
 print("[*] Create new temp folder")
 os.mkdir(temp_folder)
 
-print("[*] Fetching List from PhishTank")
-get_phishing_list()
+whitelist_regex = ""
+print("[*] Loading whitelist")
+with open(whitelist_path, 'r', encoding="utf-8") as whitelists:
+    whitelist_regex = "(" + ")|(".join(whitelists.read().splitlines()) + ")"
+print(f"[*] Whitelist Regex: {whitelist_regex}")
+
+# print("[*] Fetching List from PhishTank")
+# get_phishing_list()
 
 # For simplicity I am using the local csv for now
-# shutil.copyfile('./verified_online.csv', phishes_file_path)
+shutil.copyfile('./verified_online.csv', phishes_file_path)
 
 print("[*] Reading new list")
 new_links = set()
@@ -46,19 +54,21 @@ with open(phishes_file_path, 'r', encoding="utf-8") as csvfile:
     csvreader = csv.reader(csvfile, delimiter=',')
     for row in csvreader:
         if row[4].strip().lower() == "yes":
-            stripped = row[1].replace("https://", "").replace("http://", "").rstrip("/")
-            appended = f"0.0.0.0 {stripped}"
-            new_links.add(appended)
+            stripped = row[1].replace("https://", "").replace("http://", "").split("/")[0]
+            _match = re.match(pattern=whitelist_regex, string=stripped)
+            if _match is None:
+                appended = f"0.0.0.0 {stripped}"
+                new_links.add(appended)
 
 print("[*] Opening old list")
-with open('./phishes', 'r', encoding="utf-8") as phishes_file:
+with open(list_name, 'r', encoding="utf-8") as phishes_file:
     old_links = {line.strip() for line in phishes_file}
 
 # Update old links with new links
 links = old_links | new_links
 
 print("[*] Writing list")
-with open('./phishes', 'w', encoding="utf-8") as phishes_file:
+with open(list_name, 'w', encoding="utf-8") as phishes_file:
     phishes_file.write("\n".join(sorted(links)) + "\n")
 
 print("[*] Done!")
