@@ -42,11 +42,11 @@ with open(whitelist_path, 'r', encoding="utf-8") as whitelists:
     whitelist_regex = "(" + ")|(".join(whitelists.read().splitlines()) + ")"
 print(f"[*] Whitelist Regex: {whitelist_regex}")
 
-# print("[*] Fetching List from PhishTank")
-# get_phishing_list()
+print("[*] Fetching List from PhishTank")
+get_phishing_list()
 
 # For simplicity I am using the local csv for now
-shutil.copyfile('./verified_online.csv', phishes_file_path)
+# shutil.copyfile('./verified_online.csv', phishes_file_path)
 
 print("[*] Reading new list")
 new_links = set()
